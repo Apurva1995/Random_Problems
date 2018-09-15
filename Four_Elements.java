@@ -21,6 +21,20 @@ class Pair {
     public void setSecondIndex(int secondIndex) { this.secondIndex = secondIndex; }
 }
 
+class FinalResult {
+    
+    public Integer a;
+    public Integer b;
+    public Integer c;
+    public Integer d;
+    
+    @Override
+    public String toString() {
+        
+        return a + " " + b + " " + c + " " + d + " $";
+    }
+}
+
 
 class GFG
  {
@@ -46,6 +60,7 @@ class GFG
         for(int i=0;i<t;i++) {
             
             List<Pair> aux = new ArrayList<>();
+            List<FinalResult> finalResultList = new ArrayList<>();
             int quad[] = new int[4];
             String result;
             Set<String> set = new TreeSet<>();
@@ -91,7 +106,7 @@ class GFG
             j = 0;
             l = aux.size() - 1;
             
-            while(j<l) {
+            while(j < aux.size() && l >= 0) {
                 
                 if(aux.get(j).getValue()+aux.get(l).getValue() == k && noCommon(aux.get(j), aux.get(l))) {
                     
@@ -102,12 +117,22 @@ class GFG
                     
                     Arrays.sort(quad);
                     
-                    result = String.valueOf(quad[0]);
-                    result = result + String.valueOf(quad[1]);
-                    result = result + String.valueOf(quad[2]);
-                    result = result + String.valueOf(quad[3]);
+                    result = String.valueOf(quad[0]) + " ";
+                    result = result + String.valueOf(quad[1]) + " ";
+                    result = result + String.valueOf(quad[2]) + " ";
+                    result = result + String.valueOf(quad[3]) + " ";
                     
-                    set.add(result);
+                    if(set.add(result)) {
+                        
+                        flag = true;
+                        FinalResult finalResult = new FinalResult();
+                        finalResult.a = quad[0];
+                        finalResult.b = quad[1];
+                        finalResult.c = quad[2];
+                        finalResult.d = quad[3];
+                        
+                        finalResultList.add(finalResult);
+                    }
                     j++;
                     l--;
                 }
@@ -116,12 +141,25 @@ class GFG
                 else
                     l--;
             }
-            Iterator iterator;
-            iterator = set.iterator();
-            while (iterator.hasNext()) {
-                System.out.print(iterator.next() + " " + "$");
-            }
+            
+            Collections.sort(finalResultList, new Comparator<FinalResult>() { 
+                    @Override
+                    public int compare(FinalResult f1, FinalResult f2) {
+                        
+                        if(f1.a.compareTo(f2.a) > 0)
+                            return f1.a.compareTo(f2.a);
+                        else if(f1.b.compareTo(f2.b) > 0)
+                            return f1.b.compareTo(f2.b);
+                        else if(f1.c.compareTo(f2.c) > 0)
+                            return f1.c.compareTo(f2.c);
+                        else
+                            return f1.d.compareTo(f2.d);
+                    }
+                });
+        
             if(flag) {
+                for(int x=0;x<finalResultList.size();x++)
+                    System.out.print(finalResultList.get(x).toString());
                 System.out.println();
             }
             else
