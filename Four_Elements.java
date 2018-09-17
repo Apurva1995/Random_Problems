@@ -23,10 +23,10 @@ class Pair {
 
 class FinalResult {
     
-    public Integer a;
-    public Integer b;
-    public Integer c;
-    public Integer d;
+    public int a;
+    public int b;
+    public int c;
+    public int d;
     
     @Override
     public String toString() {
@@ -63,7 +63,7 @@ class GFG
             List<FinalResult> finalResultList = new ArrayList<>();
             int quad[] = new int[4];
             String result;
-            Set<String> set = new TreeSet<>();
+            Set<String> set = new HashSet<>();
             boolean flag = false;
             
             int arr[];
@@ -82,7 +82,7 @@ class GFG
                 arr[j] = Integer.valueOf(arrStr[j]);
             }
             
-            for(int j=0;j<n;j++) {
+            for(int j=0;j<n-1;j++) {
                 
                 for(int l=j+1;l<n;l++) {
                     
@@ -134,28 +134,36 @@ class GFG
                         finalResultList.add(finalResult);
                     }
                     j++;
-                    l--;
+                    
                 }
                 else if(aux.get(j).getValue()+aux.get(l).getValue() < k)
                     j++;
                 else
                     l--;
             }
-            
+                    
             Collections.sort(finalResultList, new Comparator<FinalResult>() { 
                     @Override
                     public int compare(FinalResult f1, FinalResult f2) {
                         
-                        if(f1.a.compareTo(f2.a) > 0)
-                            return f1.a.compareTo(f2.a);
-                        else if(f1.b.compareTo(f2.b) > 0)
-                            return f1.b.compareTo(f2.b);
-                        else if(f1.c.compareTo(f2.c) > 0)
-                            return f1.c.compareTo(f2.c);
-                        else
-                            return f1.d.compareTo(f2.d);
+                        if(new Integer(f1.a).compareTo(new Integer(f2.a)) == 0) {
+                            
+                            if(new Integer(f1.b).compareTo(new Integer(f2.b)) == 0) {
+                                
+                                if(new Integer(f1.c).compareTo(new Integer(f2.c)) == 0) {
+                                    
+                                    return new Integer(f1.d).compareTo(new Integer(f2.d));
+                                }
+                                else 
+                                    return new Integer(f1.c).compareTo(new Integer(f2.c));
+                            }
+                            else 
+                                return new Integer(f1.b).compareTo(new Integer(f2.b));
+                        }
+                        
+                        return new Integer(f1.a).compareTo(new Integer(f2.a));
                     }
-                });
+                });        
         
             if(flag) {
                 for(int x=0;x<finalResultList.size();x++)
