@@ -1,183 +1,113 @@
+
 import java.util.*;
 import java.lang.*;
 import java.io.*;
 
-class Pair {
-    
-    private int firstIndex;
-    private int secondIndex;
-    private int value;
-    
-    public int getValue() { return value; }
-    
-    public void setValue(int value) { this.value = value; }
-    
-    public int getFirstIndex() { return firstIndex; }
-    
-    public void setFirstIndex(int firstIndex) { this.firstIndex = firstIndex; }
-    
-    public int getSecondIndex() { return secondIndex; }
-    
-    public void setSecondIndex(int secondIndex) { this.secondIndex = secondIndex; }
-}
+class GFG {
+    	
+	public static class Pair {
+		int x, y;
+		public Pair(int x, int y) {
+			this.x = x;
+			this.y = y;
+		}
+	}
+	public static void addToMap(LinkedHashMap<Integer, List<Pair>> memo, int sum, Pair p) {
+		List<Pair> n = memo.getOrDefault(sum, new ArrayList<Pair>());
+		n.add(p); memo.put(sum, n);
+	}
+    public static class Quadruple {
+		int a, b, c, d;
+		public Quadruple(int a, int b, int c, int d) {
+			int[] tmp = new int[] {a, b, c, d};
+			Arrays.sort(tmp);
+			this.a = tmp[0];
+			this.b = tmp[1];
+			this.c = tmp[2];
+			this.d = tmp[3];
+		}
+		
+		public String toString() {
+			return a + " " + b + " " + c + " " + d + " $";
+		}
+		
+		@Override
+		public boolean equals(Object o) {
+			if (!(o instanceof Quadruple))
+				return false;
+			Quadruple other = (Quadruple) o;
+			return a == other.a && b == other.b && c == other.c && d == other.d;
+		}
+		
+		@Override
+		public int hashCode() {
+			return d*1000+c*100+b*10+a;
+		}
+	}
+	
+	public static void findFourSumNums(int[] arr, int X) {
+		if (arr == null || arr.length < 4)
+			return ;
+		
+		Set<Quadruple> quadruples = new HashSet<Quadruple>();
+		
+		LinkedHashMap<Integer, List<Pair>> memo = new LinkedHashMap<Integer, List<Pair>>();
+		int N = arr.length;
+		for (int i = 0; i < N; i++) {
+			for (int j = i+1; j < N; j++) {
+				int sum = arr[i] + arr[j];
+				
+				// check if HashMap already contains X-sum
+				List<Pair> list = memo.get(X-sum); 
+				if (list != null) {
+					for (Pair p : list) {
+						// combined pairs involve different elements?
+						if (p.x != i && p.y != j && p.x !=j && p.y != i)
+							quadruples.add(new Quadruple(arr[p.x], arr[p.y], arr[i], arr[j]));
+					}
+				}
+				addToMap(memo, sum, new Pair(i, j));
+			}
+		}
+		
+		if (quadruples.size() == 0) {
+		    System.out.println("-1");
+		    return;
+		}
+		ArrayList<Quadruple> list = new ArrayList<Quadruple>();
+		list.addAll(quadruples);
+		Collections.sort(list, new Comparator<Quadruple>() {
+			@Override
+			public int compare(Quadruple o1, Quadruple o2) {
+				if (o1.a != o2.a)
+					return o1.a-o2.a;
+				if (o1.b != o2.b)
+					return o1.b-o2.b;
+				if (o1.c != o2.c) 
+					return o1.c-o2.c;
+				return o1.d -o2.d;
+			}
+			
+		});
+		StringBuilder sb = new StringBuilder();
+		for (Quadruple q : list) {
+		    sb.append(q);
+		}
+		System.out.println(sb.toString());
+	}
+	public static void main (String[] args) {
+		Scanner sc = new Scanner(System.in);
+        int t = sc.nextInt();
 
-class FinalResult {
-    
-    public int a;
-    public int b;
-    public int c;
-    public int d;
-    
-    @Override
-    public String toString() {
-        
-        return a + " " + b + " " + c + " " + d + " $";
-    }
-}
+        while (t > 0) {
+            int n = sc.nextInt();
+            int X = sc.nextInt();
+            int[] arr = new int[n];
+            for (int i = 0; i < n; i++)
+                arr[i] = sc.nextInt();
 
-
-class GFG
- {
-     
-    public boolean noCommon(Pair pair1, Pair pair2) {
-        
-        if(pair1.getFirstIndex() == pair2.getFirstIndex() || pair1.getFirstIndex() == pair2.getSecondIndex() || pair1.getSecondIndex() == pair2.getFirstIndex()
-                                                            || pair1.getSecondIndex() == pair2.getSecondIndex())
-                                                            
-                                                            return false;
-        return true;
-    } 
-    
-    public void getSolution() throws Exception {
-        
-        int t, n, k;
-        String str;
-        String arrStr[];
-        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-        
-        str = br.readLine();
-        t = Integer.valueOf(str);
-        for(int i=0;i<t;i++) {
-            
-            List<Pair> aux = new ArrayList<>();
-            List<FinalResult> finalResultList = new ArrayList<>();
-            int quad[] = new int[4];
-            String result;
-            Set<String> set = new HashSet<>();
-            boolean flag = false;
-            
-            int arr[];
-            
-            str = br.readLine();
-            arrStr = str.split(" ");
-            n = Integer.valueOf(arrStr[0]);
-            k = Integer.valueOf(arrStr[1]);
-            arr = new int[n];
-        
-            str = br.readLine();
-            arrStr = str.split(" ");
-            
-            for(int j=0;j<n;j++) {
-                
-                arr[j] = Integer.valueOf(arrStr[j]);
-            }
-            
-            for(int j=0;j<n-1;j++) {
-                
-                for(int l=j+1;l<n;l++) {
-                    
-                    Pair pair = new Pair();
-                    pair.setValue(arr[j] + arr[l]);
-                    pair.setFirstIndex(j);
-                    pair.setSecondIndex(l);
-                    aux.add(pair);
-                }
-            }
-            
-            Collections.sort(aux, new Comparator<Pair>() { 
-                    @Override
-                    public int compare(Pair p1, Pair p2) {
-                        
-                        return new Integer(p1.getValue()).compareTo(new Integer(p2.getValue()));
-                    }
-                });
-            
-            int j,l;
-            j = 0;
-            l = aux.size() - 1;
-            
-            while(j < aux.size() && l >= 0) {
-                
-                if(aux.get(j).getValue()+aux.get(l).getValue() == k && noCommon(aux.get(j), aux.get(l))) {
-                    
-                    quad[0] = arr[aux.get(j).getFirstIndex()];
-                    quad[1] = arr[aux.get(j).getSecondIndex()];
-                    quad[2] = arr[aux.get(l).getFirstIndex()];
-                    quad[3] = arr[aux.get(l).getSecondIndex()];
-                    
-                    Arrays.sort(quad);
-                    
-                    result = String.valueOf(quad[0]) + " ";
-                    result = result + String.valueOf(quad[1]) + " ";
-                    result = result + String.valueOf(quad[2]) + " ";
-                    result = result + String.valueOf(quad[3]) + " ";
-                    
-                    if(set.add(result)) {
-                        
-                        flag = true;
-                        FinalResult finalResult = new FinalResult();
-                        finalResult.a = quad[0];
-                        finalResult.b = quad[1];
-                        finalResult.c = quad[2];
-                        finalResult.d = quad[3];
-                        
-                        finalResultList.add(finalResult);
-                    }
-                    j++;
-                    
-                }
-                else if(aux.get(j).getValue()+aux.get(l).getValue() < k)
-                    j++;
-                else
-                    l--;
-            }
-                    
-            Collections.sort(finalResultList, new Comparator<FinalResult>() { 
-                    @Override
-                    public int compare(FinalResult f1, FinalResult f2) {
-                        
-                        if(new Integer(f1.a).compareTo(new Integer(f2.a)) == 0) {
-                            
-                            if(new Integer(f1.b).compareTo(new Integer(f2.b)) == 0) {
-                                
-                                if(new Integer(f1.c).compareTo(new Integer(f2.c)) == 0) {
-                                    
-                                    return new Integer(f1.d).compareTo(new Integer(f2.d));
-                                }
-                                else 
-                                    return new Integer(f1.c).compareTo(new Integer(f2.c));
-                            }
-                            else 
-                                return new Integer(f1.b).compareTo(new Integer(f2.b));
-                        }
-                        
-                        return new Integer(f1.a).compareTo(new Integer(f2.a));
-                    }
-                });        
-        
-            if(flag) {
-                for(int x=0;x<finalResultList.size();x++)
-                    System.out.print(finalResultList.get(x).toString());
-                System.out.println();
-            }
-            else
-                System.out.println("-1");
-        }  
-    } 
-     
-	public static void main (String[] args) throws Exception
-	{
-	    GFG gfg = new GFG();
-	    gfg.getSolution();
+            findFourSumNums(arr, X);
+            t--;	
+        }
 	}
 }
