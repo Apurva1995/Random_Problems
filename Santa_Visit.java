@@ -6,20 +6,14 @@ import java.io.*;
 
 class Codechef
 {
-    private int n, m;
+    private int n, m, level;
     private Map<Integer, List<Integer>> tree;
-    private int[] parent;
+    private int[][] parent;
     private int[] depth;
-    private List<Integer> firstApperance;
-    private List<Integer> eulerPath;
-    private int[] depthEuler;
-    private BufferedReader br;
-    private int levels;
-    private int sparseTable[][];
-    private List<Integer> travelled;
     private int[] maxNodes;
-    private static int count = 0;
+    private int[] travelled;
     private static int max = 0;
+    private BufferedReader br;
     
     
     private void addEdge(int u, int v) {
@@ -41,18 +35,12 @@ class Codechef
     private void dfs(int cur, int prev) 
     { 
         depth[cur] = depth[prev] + 1;
-        parent[cur] = prev;
-        if(firstApperance.get(cur) < 0)
-            firstApperance.set(cur, count);
-        eulerPath.add(cur);
+        parent[cur][0] = prev;
         
         for (int i=0; i<tree.get(cur).size(); i++) 
         { 
             if (tree.get(cur).get(i) != prev) {
-                count++;
                 dfs(tree.get(cur).get(i), cur); 
-                eulerPath.add(cur);
-                count++;
             }
         }
     } 
@@ -70,38 +58,22 @@ class Codechef
         }
     }
     
-    private void fillDepthEuler() {
-        
-        for(int i=0;i<eulerPath.size();i++) {
-            
-            depthEuler[i] = depth[eulerPath.get(i)];
-        }
-    }
-    
-    private void fillSparseTable() {
-    
-        //Initializing minimum for the intervals with length 1
-        for(int i=0;i<eulerPath.size();i++)
-            sparseTable[i][0] = i;
-    
-        //Computing minimum for smaller to bigger intervals
-        for(int i=1;(1<<i)<=eulerPath.size();i++) {
-        
-            //Computing minimum for all intervals of size 2^j
-            for(int j=0;(j+(1<<i)-1)<eulerPath.size();j++) {
-            
-                if(depthEuler[sparseTable[j][i-1]] < depthEuler[sparseTable[j+(1<<i-1)][i-1]])
-                    sparseTable[j][i] = sparseTable[j][i-1];
-                
-                else
-                    sparseTable[j][i] = sparseTable[j+(1<<i)-1][i-1];
-            }
-        }
+    private void precomputeSparseMatrix() 
+    { 
+        for (int i=1; i<level; i++) 
+        { 
+            for (int node = 1; node <= n; node++) 
+            { 
+                if (parent[node][i-1] != 0) 
+                    parent[node][i] = 
+                        parent[parent[node][i-1]][i-1]; 
+            } 
+        } 
     }
     
     private int fillMaxNodes(int cur, int prev) {
         
-        maxNodes[cur] = travelled.get(cur);
+        maxNodes[cur] = travelled[cur];
         
         for (int i=0; i<tree.get(cur).size(); i++) 
         { 
@@ -117,76 +89,83 @@ class Codechef
     
     private void preprocess() throws Exception{
         
+        level = (int)Math.ceil(Math.log(n)/Math.log(2.0)+1e-10);
         tree = new HashMap<>();
-        parent = new int[n+1];
+        parent = new int[n+1][level];
         depth = new int[n+1];
         maxNodes =  new int[n+1];
-        firstApperance = new ArrayList<>(Collections.nCopies(n+1,-1));
-        travelled = new ArrayList<>(Collections.nCopies(n+1,0));
-        eulerPath = new ArrayList<>();
+        travelled = new int[n+1];
         
         //creating Tree
         createTree();
-        //Doing DFS to fill parent, depth, eulerPath and firstApperance
-        depth[0] = -1;
+        
         dfs(1, 0);
         
-        depthEuler = new int[eulerPath.size()];
-        //Filling depthEuler using eulerPath and depth
-        fillDepthEuler();
-        
-        //Preparing for filling sparse matrix
-        levels = (int)Math.ceil(Math.log(eulerPath.size())/Math.log(2.0));
-        sparseTable = new int[eulerPath.size()][levels];
-        fillSparseTable();
-        
+        precomputeSparseMatrix();
+        for(int i=1;i<=n;i++) {
+            
+            for(int j=0;j<level;j++) {
+                
+                System.out.print(parent[i][j] + " ");
+            }
+            System.out.println();
+        }
     }
     
-    private int RMQ(int l, int r) {
-    
-        int j = (int)(Math.log(r-l+1)/Math.log(2.0));
-    
-        if(depthEuler[sparseTable[l][j]] < depthEuler[sparseTable[(r-(1<<j))+1][j]])
-            return eulerPath.get(sparseTable[l][j]);
-        else
-            return eulerPath.get(sparseTable[(r-(1<<j))+1][j]);
+    int LCA(int u, int v) 
+    { 
+        if (depth[v] < depth[u]) {
+            
+            int temp;
+            temp = v;
+            v = u;
+            u = temp;
+        }
+        int diff = depth[v] - depth[u]; 
+  
+        for (int i=0; i<level; i++) 
+            if (((diff>>i) & 1) == 1) 
+                v = parent[v][i]; 
+  
+        if (u == v) 
+            return u; 
+ 
+        for (int i=level-1; i>=0; i--) 
+            if (parent[u][i] != parent[v][i]) 
+            { 
+                u = parent[u][i]; 
+                v = parent[v][i]; 
+            } 
+  
+        return parent[u][0]; 
     }
     
     private void answerQueries() throws Exception{
         
         String input;
         String inputArr[];
-        int lca, l, r;
+        int lca, u, v;
         
         for(int i=0;i<m;i++) {
             
             input = br.readLine();
             inputArr = input.split(" ");
             
-            l = firstApperance.get(Integer.valueOf(inputArr[0]));
-            r = firstApperance.get(Integer.valueOf(inputArr[1]));
+            u = Integer.valueOf(inputArr[0]);
+            v = Integer.valueOf(inputArr[1]);
             
-            if(l > r) {
+            lca = LCA(u, v);
+            
+            
+            travelled[u] += 1;
+            travelled[v] += 1;
+            travelled[lca] -= 1;
+            
+            if(parent[lca][0] != 0)
+                travelled[parent[lca][0]] -= 1;
                 
-                //Swapping l and r
-                l = l + r;
-                r = l - r;
-                l = l - r;
-            }
-            
-            lca = RMQ(l, r);
-            
-            travelled.set(Integer.valueOf(inputArr[0]), travelled.get(Integer.valueOf(inputArr[0])) + 1);
-            travelled.set(Integer.valueOf(inputArr[1]), travelled.get(Integer.valueOf(inputArr[1])) + 1);
-            travelled.set(lca, travelled.get(lca) - 1);
-            
-            if(parent[lca] != 0)
-                travelled.set(parent[lca], travelled.get(parent[lca]) - 1);
-                
-            fillMaxNodes(1, 0);
-            
         }
-        
+        fillMaxNodes(1, 0);
     }
     
     public void getInput() throws Exception {
