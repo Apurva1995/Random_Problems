@@ -4,7 +4,6 @@ import java.util.*;
 import java.lang.*;
 import java.io.*;
 
-/* Name of the class has to be "Main" only if the class is public. */
 class Codechef
 {
     private int n, m;
@@ -17,7 +16,10 @@ class Codechef
     private BufferedReader br;
     private int levels;
     private int sparseTable[][];
+    private List<Integer> travelled;
+    private int[] maxNodes;
     private static int count = 0;
+    private static int max = 0;
     
     
     private void addEdge(int u, int v) {
@@ -52,7 +54,7 @@ class Codechef
                 eulerPath.add(cur);
                 count++;
             }
-        } 
+        }
     } 
     
     public void createTree() throws Exception{
@@ -97,12 +99,30 @@ class Codechef
         }
     }
     
+    private int fillMaxNodes(int cur, int prev) {
+        
+        maxNodes[cur] = travelled.get(cur);
+        
+        for (int i=0; i<tree.get(cur).size(); i++) 
+        { 
+            if (tree.get(cur).get(i) != prev) {
+                maxNodes[cur] += fillMaxNodes(tree.get(cur).get(i), cur); 
+            }
+        }
+        
+        if(max < maxNodes[cur])
+            max = maxNodes[cur];
+        return maxNodes[cur];
+    }
+    
     private void preprocess() throws Exception{
         
         tree = new HashMap<>();
         parent = new int[n+1];
         depth = new int[n+1];
+        maxNodes =  new int[n+1];
         firstApperance = new ArrayList<>(Collections.nCopies(n+1,-1));
+        travelled = new ArrayList<>(Collections.nCopies(n+1,0));
         eulerPath = new ArrayList<>();
         
         //creating Tree
@@ -117,38 +137,56 @@ class Codechef
         
         //Preparing for filling sparse matrix
         levels = (int)Math.ceil(Math.log(eulerPath.size())/Math.log(2.0));
-        //System.out.println(levels);
-        /*sparseTable = new int[eulerPath.size()][levels];
-        fillSparseTable();*/
+        sparseTable = new int[eulerPath.size()][levels];
+        fillSparseTable();
         
     }
     
     private int RMQ(int l, int r) {
     
         int j = (int)(Math.log(r-l+1)/Math.log(2.0));
-        System.out.println(j);
     
-        if(depthEuler[sparseTable[l][j]] < depthEuler[sparseTable[r-(1<<j)+1][j]])
+        if(depthEuler[sparseTable[l][j]] < depthEuler[sparseTable[(r-(1<<j))+1][j]])
             return eulerPath.get(sparseTable[l][j]);
         else
-            return eulerPath.get(sparseTable[r-(1<<j)+1][j]);
+            return eulerPath.get(sparseTable[(r-(1<<j))+1][j]);
     }
     
     private void answerQueries() throws Exception{
         
         String input;
         String inputArr[];
-        int lca;
+        int lca, l, r;
         
         for(int i=0;i<m;i++) {
             
             input = br.readLine();
             inputArr = input.split(" ");
             
-            lca = RMQ(firstApperance.get(Integer.valueOf(inputArr[0])), firstApperance.get(Integer.valueOf(inputArr[1])));
+            l = firstApperance.get(Integer.valueOf(inputArr[0]));
+            r = firstApperance.get(Integer.valueOf(inputArr[1]));
             
-            System.out.println(lca);
+            if(l > r) {
+                
+                //Swapping l and r
+                l = l + r;
+                r = l - r;
+                l = l - r;
+            }
+            
+            lca = RMQ(l, r);
+            
+            travelled.set(Integer.valueOf(inputArr[0]), travelled.get(Integer.valueOf(inputArr[0])) + 1);
+            travelled.set(Integer.valueOf(inputArr[1]), travelled.get(Integer.valueOf(inputArr[1])) + 1);
+            travelled.set(lca, travelled.get(lca) - 1);
+            
+            if(parent[lca] != 0)
+                travelled.set(parent[lca], travelled.get(parent[lca]) - 1);
+                
+            fillMaxNodes(1, 0);
+            
         }
+        
     }
     
     public void getInput() throws Exception {
@@ -162,10 +200,13 @@ class Codechef
         n = Integer.valueOf(inputArr[0]);
         m = Integer.valueOf(inputArr[1]);
         
-        preprocess();
-        answerQueries();
-        
-        
+        if(n == 1)
+            System.out.println(m);
+        else {
+            preprocess();
+            answerQueries();
+            System.out.println(max);
+        }
     }
     
 	public static void main (String[] args) throws java.lang.Exception
