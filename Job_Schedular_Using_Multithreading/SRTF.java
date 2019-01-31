@@ -11,6 +11,17 @@ class Job {
     private int priority;
     private int id;
     
+    public Job() {
+        
+    }
+    
+    public Job(int arrivalTime, int burstTime, int priority, int id) {
+        this.arrivalTime = arrivalTime;
+        this.burstTime = burstTime;
+        this.priority = priority;
+        this.id = id;
+    }
+    
     public void setArrivalTime(int arrivalTime) {
         this.arrivalTime = arrivalTime;
     }
@@ -88,6 +99,7 @@ class WorkingThread extends Thread {
         Job p = ThreadScheduler.getJobToExecute();
         System.out.println("Process "+ p.getId() +  " is executed by Thread " + Thread.getName());
         if(ThreadScheduler.hasAllJobsArrived) {
+            System.out.println("Process "+ p.getId() +  " is executed by Thread " + Thread.getName() + " to completion");
             p.setBurstTime(0);
         }
         else {
@@ -104,6 +116,7 @@ class ThreadScheduler
     public static int time = 0;
     private static int jobCount;
     private boolean hasAllJobsArrived;
+    private static final int threadPoolSize;
     
     public static boolean getHasAllJobsArrived() {
         return this.hasAllJobsArrived;
@@ -112,16 +125,17 @@ class ThreadScheduler
     public void addJobs(List<Job> jobs) {
         
         for(Job p : jobs) {
-            if(jobsToRun.get(p.getArrivalTime()) == null) {
-                jobsToRun.put(jobsToRun.getArrivalTime(), new ArrayList<>().add(p));
+            if(this.jobsToRun.get(p.getArrivalTime()) == null) {
+                this.jobsToRun.put(this.jobsToRun.getArrivalTime(), new ArrayList<>().add(p));
             }
             else {
-                jobsToRun.get(p.getArrivalTime()).add(p);
+                this.jobsToRun.get(p.getArrivalTime()).add(p);
             }
         }
     }
     
     public void createThreadPool(int maxNumberOfThreads) {
+        this.threadPoolSize = maxNumberOfThreads;
         this.threadPool =  = new LinkedList<>();
         for(int i=0;i<maxNumberOfThreads;i++) {
             threadPool.add(new WorkingThread());
@@ -144,7 +158,7 @@ class ThreadScheduler
                 map.remove(time);
                 this.time += 1;
             }
-            for(int i=0;i<TaskAdder.jobsAvailableAtParticularTime.size();i++) {
+            for(int i=0;i<TaskAdder.jobsAvailableAtParticularTime.size() && i<this.threadPoolSize;i++) {
                 WorkingThread thread = threadPool.remove();
                 thread.start();
                 threadPool.add(thread);
@@ -154,12 +168,25 @@ class ThreadScheduler
         
         //When all the jobs have arrived
         while(!TaskManager.jobsAvailableAtParticularTime.isEmpty()) {
-            
+            WorkingThread thread = threadPool.remove();
+            thread.start();
+            threadPool.add(thread);
         }
     }
     
+    //Driver Code
 	public static void main (String[] args) throws java.lang.Exception
 	{
-		// your code goes here
+		ThreadScheduler threadScheduler = new ThreadScheduler();
+        List<Job> jobs = new ArrayList<>();
+        jobs.add(new Job(0, 4, 5, 1));
+        jobs.add(new Job(0, 3, 4, 2));
+        jobs.add(new Job(1, 10, 5, 3));
+        jobs.add(new Job(2, 2, 1, 4));
+        jobs.add(new Job(2, 5, 2, 5));
+        jobs.add(new Job(2, 5, 1, 6));
+        threadScheduler.addJobs(jobs);
+		threadScheduler.createThreadPool(3);
+		threadScheduler.executeJobs();
 	}
 }
